@@ -20,8 +20,8 @@ import (
 )
 
 var _, filename, _, _ = runtime.Caller(0)
-var dir, _ = filepath.Abs(filepath.Dir(filename))
-var indexTemplate = template.Must(template.New("index.tmpl").ParseFiles(filepath.Join(dir, "templates", "index.tmpl")))
+var rootDir, _ = filepath.Abs(filepath.Dir(filename))
+var indexTemplate = template.Must(template.New("index.tmpl").ParseFiles(filepath.Join(rootDir, "templates", "index.tmpl")))
 
 var (
 	api     *slack.Client
@@ -93,7 +93,7 @@ func main() {
 	go pollSlack()
 	mux := http.NewServeMux()
 	mux.HandleFunc("/invite/", handleInvite)
-	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static"))))
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir(filepath.Join(rootDir, "static")))))
 	mux.HandleFunc("/", enforceHTTPSFunc(homepage))
 	mux.Handle("/debug/vars", http.DefaultServeMux)
 	err := http.ListenAndServe(":"+c.Port, handlers.CombinedLoggingHandler(os.Stdout, mux))
