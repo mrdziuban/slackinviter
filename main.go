@@ -7,6 +7,8 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"path/filepath"
+	"runtime"
 	"text/template"
 	"time"
 
@@ -17,7 +19,9 @@ import (
 	"github.com/paulbellamy/ratecounter"
 )
 
-var indexTemplate = template.Must(template.New("index.tmpl").ParseFiles("templates/index.tmpl"))
+var _, filename, _, _ = runtime.Caller(0)
+var dir, _ = filepath.Abs(filepath.Dir(filename))
+var indexTemplate = template.Must(template.New("index.tmpl").ParseFiles(filepath.Join(dir, "templates", "index.tmpl")))
 
 var (
 	api     *slack.Client
