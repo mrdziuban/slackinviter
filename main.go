@@ -34,6 +34,8 @@ var (
 	missingLastName,
 	missingEmail,
 	missingCoC,
+	missingInviteToken,
+	invalidInviteToken,
 	successfulCaptcha,
 	failedCaptcha,
 	invalidCaptcha,
@@ -50,6 +52,9 @@ type Specification struct {
 	CaptchaSitekey string `required:"true"`
 	CaptchaSecret  string `required:"true"`
 	SlackToken     string `required:"true"`
+	SlackTeam      string `required:"true"`
+	InviteToken    string `required:"false"`
+	DisableCoC     string `required:"false"`
 	EnforceHTTPS   bool
 }
 
@@ -67,6 +72,8 @@ func init() {
 	m.Set("missing_last_name", &missingLastName)
 	m.Set("missing_email", &missingEmail)
 	m.Set("missing_coc", &missingCoC)
+	m.Set("missing_confirm_token", &missingInviteToken)
+	m.Set("invalid_confirm_token", &invalidInviteToken)
 	m.Set("failed_captcha", &failedCaptcha)
 	m.Set("invalid_captcha", &invalidCaptcha)
 	m.Set("successful_captcha", &successfulCaptcha)
@@ -157,11 +164,15 @@ func homepage(w http.ResponseWriter, r *http.Request) {
 			UserCount,
 			ActiveCount string
 			Team *team
+			InviteToken bool
+			ShowCoC bool
 		}{
 			c.CaptchaSitekey,
 			userCount.String(),
 			activeUserCount.String(),
 			ourTeam,
+			c.InviteToken != "",
+			c.DisableCoC != "true",
 		},
 	)
 	if err != nil {
@@ -205,6 +216,7 @@ func handleInvite(w http.ResponseWriter, r *http.Request) {
 	lname := r.FormValue("lname")
 	email := r.FormValue("email")
 	coc := r.FormValue("coc")
+	inviteToken := r.FormValue("invite_token")
 	if email == "" {
 		missingEmail.Add(1)
 		http.Error(w, "Missing email", http.StatusPreconditionFailed)
@@ -220,12 +232,24 @@ func handleInvite(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing last name", http.StatusPreconditionFailed)
 		return
 	}
-	if coc != "1" {
+	if c.DisableCoC != "true" && coc != "1" {
 		missingCoC.Add(1)
 		http.Error(w, "You need to accept the code of conduct", http.StatusPreconditionFailed)
 		return
 	}
-	err = api.InviteToTeam("Gophers", fname, lname, email)
+	if c.InviteToken != "" {
+		if inviteToken == "" {
+			missingInviteToken.Add(1)
+			http.Error(w, "Missing invite token", http.StatusPreconditionFailed)
+			return
+		}
+		if inviteToken != c.InviteToken {
+			invalidInviteToken.Add(1)
+			http.Error(w, "Invite token does not match", http.StatusPreconditionFailed)
+			return
+		}
+	}
+	err = api.InviteToTeam(c.SlackTeam, fname, lname, email)
 	if err != nil {
 		log.Println("InviteToTeam error:", err)
 		inviteErrors.Add(1)
