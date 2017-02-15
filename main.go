@@ -57,8 +57,8 @@ type Specification struct {
 	CaptchaSecret  string `required:"true"`
 	SlackToken     string `required:"true"`
 	SlackTeam      string `required:"true"`
-	InviteToken    string `required:"false"`
-	DisableCoC     string `required:"false"`
+	InviteToken    string
+	DisableCoC     bool
 	EnforceHTTPS   bool
 }
 
@@ -176,7 +176,7 @@ func homepage(w http.ResponseWriter, r *http.Request) {
 			activeUserCount.String(),
 			ourTeam,
 			c.InviteToken != "",
-			c.DisableCoC != "true",
+			!c.DisableCoC,
 		},
 	)
 	if err != nil {
@@ -236,7 +236,7 @@ func handleInvite(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing last name", http.StatusPreconditionFailed)
 		return
 	}
-	if c.DisableCoC != "true" && coc != "1" {
+	if !c.DisableCoC && coc != "1" {
 		missingCoC.Add(1)
 		http.Error(w, "You need to accept the code of conduct", http.StatusPreconditionFailed)
 		return

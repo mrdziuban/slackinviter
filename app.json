@@ -12,6 +12,10 @@
       "description": "A Slack API token (find it on https://api.slack.com/web)",
       "required": true
     },
+    "SLACKINVITER_SLACKTEAM": {
+      "description": "The name of your Slack team (e.g. https://<YOUR-TEAM>.slack.com)",
+      "required": true
+    },
     "SLACKINVITER_CAPTCHASITEKEY": {
       "description": "Recaptcha sitekey",
       "required": true
@@ -19,6 +23,16 @@
     "SLACKINVITER_CAPTCHASECRET": {
       "description": "Recaptcha secret key",
       "required": true
+    },
+    "SLACKINVITER_INVITETOKEN": {
+      "description": "Optional token to require users to enter",
+      "required": false,
+      "value": ""
+    },
+    "SLACKINVITER_DISABLECOC": {
+      "description": "Optionally remove the Code of Conduct checkbox (enter 'true' to remove)",
+      "required": false,
+      "value": "false"
     }
   }
 }
